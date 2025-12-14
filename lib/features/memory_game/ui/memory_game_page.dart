@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../logic/memory_game_controller.dart';
 import '../models/game_level.dart';
 import 'memory_card_widget.dart';
+import '../../../utils/sound_player.dart';
 
 class MemoryGamePage extends StatefulWidget {
   final GameLevel level;
@@ -45,11 +46,27 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
               ),
               itemBuilder: (_, i) => MemoryCardWidget(
                 card: controller.cards[i],
-                onTap: () => controller.flipCard(
-                  controller.cards[i],
-                  () => setState(() {}),
-                  () => _showWinDialog(),
-                ),
+                onTap: () async {
+                  final result = await controller.flipCard(
+                    controller.cards[i],
+                    () => setState(() {}),
+                  );
+
+                  switch (result) {
+                    case FlipResult.correct:
+                      SoundService.playCorrect();
+                      break;
+                    case FlipResult.wrong:
+                      SoundService.playWrong();
+                      break;
+                    case FlipResult.win:
+                      SoundService.playWin();
+                      _showWinDialog();
+                      break;
+                    default:
+                      break;
+                  }
+                },
               ),
             ),
           ),

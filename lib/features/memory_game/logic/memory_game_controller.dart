@@ -1,6 +1,8 @@
 import '../models/game_level.dart';
 import '../models/memory_card.dart';
 
+enum FlipResult { none, correct, wrong, win }
+
 class MemoryGameController {
   final GameLevel level;
   late List<MemoryCard> cards;
@@ -29,40 +31,38 @@ class MemoryGameController {
       ..shuffle();
   }
 
-  Future<void> flipCard(
-    MemoryCard card,
-    void Function() refresh,
-    void Function() onWin,
-  ) async {
-    if (_busy || card.isFlipped || card.isMatched) return;
+  Future<FlipResult> flipCard(MemoryCard card, void Function() refresh) async {
+    if (_busy || card.isFlipped || card.isMatched) return FlipResult.none;
 
     card.isFlipped = true;
     refresh();
 
     if (_firstCard == null) {
       _firstCard = card;
-      return;
+      return FlipResult.none;
     }
 
     _busy = true;
     attempts++; // 👈 AQUÍ CUENTA EL INTENTO
 
+    FlipResult result;
+
     if (_firstCard!.value == card.value) {
       _firstCard!.isMatched = true;
       card.isMatched = true;
+      result = isCompleted ? FlipResult.win : FlipResult.correct;
     } else {
       await Future.delayed(const Duration(seconds: 1));
       _firstCard!.isFlipped = false;
       card.isFlipped = false;
+      result = FlipResult.wrong;
     }
 
     _firstCard = null;
     _busy = false;
     refresh();
 
-    if (isCompleted) {
-      onWin();
-    }
+    return result;
   }
 
   bool get isCompleted => cards.every((card) => card.isMatched);

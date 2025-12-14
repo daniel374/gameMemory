@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/memory_game/ui/memory_game_page.dart';
+import 'features/memory_game/ui/level_selection_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +13,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: MemoryGamePage(), //const MyHomePage(title: 'Rojo Turbo'),
+      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
+      home: const LevelSelectionPage(), //const MyHomePage(title: 'Rojo Turbo'),
     );
   }
 }

@@ -4,6 +4,7 @@ import '../models/memory_card.dart';
 class MemoryGameController {
   final GameLevel level;
   late List<MemoryCard> cards;
+  int attempts = 0;
 
   MemoryCard? _firstCard;
   bool _busy = false;
@@ -44,6 +45,7 @@ class MemoryGameController {
     }
 
     _busy = true;
+    attempts++; // 👈 AQUÍ CUENTA EL INTENTO
 
     if (_firstCard!.value == card.value) {
       _firstCard!.isMatched = true;

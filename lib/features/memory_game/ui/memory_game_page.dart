@@ -24,22 +24,36 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Juego de Memoria')),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: controller.cards.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemBuilder: (_, i) => MemoryCardWidget(
-          card: controller.cards[i],
-          onTap: () => controller.flipCard(
-            controller.cards[i],
-            () => setState(() {}),
-            () => _showWinDialog(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              'Intentos: ${controller.attempts}',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
+
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: controller.cards.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemBuilder: (_, i) => MemoryCardWidget(
+                card: controller.cards[i],
+                onTap: () => controller.flipCard(
+                  controller.cards[i],
+                  () => setState(() {}),
+                  () => _showWinDialog(),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -50,9 +64,9 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('🎉 ¡Muy bien!'),
-        content: const Text(
-          '¡Ganaste el juego!',
-          style: TextStyle(fontSize: 22),
+        content: Text(
+          'Ganaste en ${controller.attempts} intentos 💪',
+          style: const TextStyle(fontSize: 22),
         ),
         actions: [
           TextButton(

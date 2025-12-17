@@ -1,31 +1,25 @@
+import '../models/memory_mode.dart';
 import '../models/game_level.dart';
-import '../models/memory_card.dart';
+import '../models/card_mode.dart';
 
 enum FlipResult { none, correct, wrong, win }
 
 class MemoryGameController {
   final GameLevel level;
+  final MemoryMode mode;
+
   late List<MemoryCard> cards;
   int attempts = 0;
 
   MemoryCard? _firstCard;
   bool _busy = false;
 
-  MemoryGameController(this.level) {
+  MemoryGameController({required this.level, required this.mode}) {
     _initGame();
   }
 
   void _initGame() {
-    final values = [
-      '🐶',
-      '🐱',
-      '🦁',
-      '🐸',
-      '🐵',
-      '🐼',
-      '🐰',
-      '🐯',
-    ].take(level.pairCount).toList();
+    final values = mode.generateItems(level.pairCount);
 
     cards = [...values, ...values].map((e) => MemoryCard(value: e)).toList()
       ..shuffle();

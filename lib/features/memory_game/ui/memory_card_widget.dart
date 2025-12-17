@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/memory_card.dart';
+import '../models/card_mode.dart';
 
 class MemoryCardWidget extends StatelessWidget {
   final MemoryCard card;
   final VoidCallback onTap;
 
-  const MemoryCardWidget({
-    super.key,
-    required this.card,
-    required this.onTap,
-  });
+  const MemoryCardWidget({super.key, required this.card, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

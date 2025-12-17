@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import '../models/game_level.dart';
+import '../models/animals_mode.dart';
+import '../models/letters_mode.dart';
+import '../models/numbers_mode.dart';
 import '../models/memory_mode.dart';
 import '../../../widgets/center_menu.dart';
-import 'memory_game_page.dart';
+import 'level_selection_page.dart';
 
-class LevelSelectionPage extends StatelessWidget {
-  final MemoryMode mode;
-
-  const LevelSelectionPage({super.key, required this.mode});
+class ModeSelectionPage extends StatelessWidget {
+  const ModeSelectionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final modes = <MemoryMode>[AnimalsMode(), LettersMode(), NumbersMode()];
+
     return Scaffold(
-      backgroundColor: Colors.blue.shade100,
-      appBar: AppBar(title: Text('Elige un ${mode.title}')),
+      backgroundColor: Colors.orange.shade100,
+      appBar: AppBar(title: const Text('Elige un modo')),
       body: CenterMenu(
-        imagePath: mode.image,
-        buttons: GameLevel.values.map((level) {
+        imagePath: 'assets/images/memory.png',
+        buttons: modes.map((mode) {
           return ElevatedButton(
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(240, 65),
@@ -26,11 +28,11 @@ class LevelSelectionPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => MemoryGamePage(level: level, mode: mode),
+                  builder: (_) => LevelSelectionPage(mode: mode),
                 ),
               );
             },
-            child: Text(level.title),
+            child: Text(mode.title),
           );
         }).toList(),
       ),

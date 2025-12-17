@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/memory_mode.dart';
+import '../../../utils/voice_player.dart';
 import '../logic/memory_game_controller.dart';
 import '../models/game_level.dart';
 import 'memory_card_widget.dart';
@@ -6,7 +8,9 @@ import '../../../utils/sound_player.dart';
 
 class MemoryGamePage extends StatefulWidget {
   final GameLevel level;
-  const MemoryGamePage({super.key, required this.level});
+  final MemoryMode mode;
+
+  const MemoryGamePage({super.key, required this.level, required this.mode});
 
   @override
   State<MemoryGamePage> createState() => _MemoryGamePageState();
@@ -18,13 +22,13 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
   @override
   void initState() {
     super.initState();
-    controller = MemoryGameController(widget.level);
+    controller = MemoryGameController(level: widget.level, mode: widget.mode);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Juego de Memoria')),
+      appBar: AppBar(title: Text('Memoria - ${widget.mode.title}')),
       body: Column(
         children: [
           Padding(
@@ -52,20 +56,7 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
                     () => setState(() {}),
                   );
 
-                  switch (result) {
-                    case FlipResult.correct:
-                      SoundService.playCorrect();
-                      break;
-                    case FlipResult.wrong:
-                      SoundService.playWrong();
-                      break;
-                    case FlipResult.win:
-                      SoundService.playWin();
-                      _showWinDialog();
-                      break;
-                    default:
-                      break;
-                  }
+                  _handleFlipResult(result, controller.cards[i].value);
                 },
               ),
             ),
@@ -73,6 +64,24 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
         ],
       ),
     );
+  }
+
+  void _handleFlipResult(FlipResult result, String value) {
+    switch (result) {
+      case FlipResult.correct:
+        SoundService.playCorrect();
+        VoicePlayer.speak(value);
+        break;
+      case FlipResult.wrong:
+        SoundService.playWrong();
+        break;
+      case FlipResult.win:
+        SoundService.playWin();
+        _showWinDialog();
+        break;
+      default:
+        break;
+    }
   }
 
   void _showWinDialog() {

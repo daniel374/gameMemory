@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:test2app/core/asset_cache.dart';
 import '../models/animals_mode.dart';
 import '../models/letters_mode.dart';
 import '../models/numbers_mode.dart';
@@ -24,11 +25,26 @@ class ModeSelectionPage extends StatelessWidget {
               minimumSize: const Size(240, 65),
               textStyle: const TextStyle(fontSize: 24),
             ),
-            onPressed: () {
+            onPressed: () async {
+              await AssetCache.preloadAsset(context, [mode.image]);
+
               Navigator.push(
                 context,
-                MaterialPageRoute(
+                /*MaterialPageRoute(
                   builder: (_) => LevelSelectionPage(mode: mode),
+                ),*/
+                PageRouteBuilder(
+                  transitionDuration: const Duration(milliseconds: 400),
+                  pageBuilder: (_, __, ___) => LevelSelectionPage(mode: mode),
+                  transitionsBuilder: (_, animation, _, child) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween(begin: 0.95, end: 1.0).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
                 ),
               );
             },

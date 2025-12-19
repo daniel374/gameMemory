@@ -1,22 +1,32 @@
 import '../models/memory_mode.dart';
 import '../models/game_level.dart';
 import '../models/card_mode.dart';
+import '../models/player.dart';
 
 enum FlipResult { none, correct, wrong, win }
 
 class MemoryGameController {
   final GameLevel level;
   final MemoryMode mode;
+  final List<Player> players;
 
   late List<MemoryCard> cards;
+
+  int currentPlayerIndex = 0;
   int attempts = 0;
 
   MemoryCard? _firstCard;
   bool _busy = false;
 
-  MemoryGameController({required this.level, required this.mode}) {
+  MemoryGameController({
+    required this.level,
+    required this.mode,
+    required this.players,
+  }) {
     _initGame();
   }
+
+  Player get currentPlayer => players[currentPlayerIndex];
 
   void _initGame() {
     final values = mode.generateItems(level.pairCount);
@@ -44,11 +54,15 @@ class MemoryGameController {
     if (_firstCard!.value == card.value) {
       _firstCard!.isMatched = true;
       card.isMatched = true;
+
+      currentPlayer.score++; // ⭐ SUMA PUNTO
       result = isCompleted ? FlipResult.win : FlipResult.correct;
     } else {
       await Future.delayed(const Duration(seconds: 1));
       _firstCard!.isFlipped = false;
       card.isFlipped = false;
+
+      _nextPlayer(); // 🔁 CAMBIA TURNO
       result = FlipResult.wrong;
     }
 
@@ -59,5 +73,16 @@ class MemoryGameController {
     return result;
   }
 
+  void _nextPlayer() {
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  }
+
+  // ✅ Juego terminado
   bool get isCompleted => cards.every((card) => card.isMatched);
+
+  // 🏆 GANADOR
+  Player get winner {
+    players.sort((a, b) => b.score.compareTo(a.score));
+    return players.first;
+  }
 }

@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import '../models/player.dart';
 import '../models/memory_mode.dart';
-import '../../../utils/voice_player.dart';
 import '../logic/memory_game_controller.dart';
 import '../models/game_level.dart';
 import 'memory_card_widget.dart';
 import '../../../utils/sound_player.dart';
+import '../../../utils/voice_player.dart';
 
 class MemoryGamePage extends StatefulWidget {
   final GameLevel level;
   final MemoryMode mode;
+  final List<Player> players;
 
-  const MemoryGamePage({super.key, required this.level, required this.mode});
+  const MemoryGamePage({
+    super.key,
+    required this.level,
+    required this.mode,
+    required this.players,
+  });
 
   @override
   State<MemoryGamePage> createState() => _MemoryGamePageState();
@@ -22,7 +29,11 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
   @override
   void initState() {
     super.initState();
-    controller = MemoryGameController(level: widget.level, mode: widget.mode);
+    controller = MemoryGameController(
+      level: widget.level,
+      mode: widget.mode,
+      players: widget.players,
+    );
   }
 
   @override
@@ -31,13 +42,7 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
       appBar: AppBar(title: Text('Memoria - ${widget.mode.title}')),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              'Intentos: ${controller.attempts}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-          ),
+          _buildScoreBoard(),
 
           Expanded(
             child: GridView.builder(
@@ -66,6 +71,45 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
     );
   }
 
+  // 🏆 MARCADOR SUPERIOR
+  Widget _buildScoreBoard() {
+    return SizedBox(
+      height: 90,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.all(8),
+        itemCount: controller.players.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) {
+          final player = controller.players[i];
+          final isTurn = i == controller.currentPlayerIndex;
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isTurn ? Colors.orange : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  player.name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text('⭐ ${player.score}', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _handleFlipResult(FlipResult result, String value) {
     switch (result) {
       case FlipResult.correct:
@@ -89,9 +133,11 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text('🎉 ¡Muy bien!'),
+        title: const Text('🏆 Fin del juego'),
         content: Text(
-          'Ganaste en ${controller.attempts} intentos 💪',
+          'Ganó ${controller.winner.name}\n'
+          '⭐ ${controller.winner.score} puntos',
+          textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 22),
         ),
         actions: [

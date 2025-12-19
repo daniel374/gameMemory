@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/game_level.dart';
 import '../models/memory_mode.dart';
 import '../../../widgets/center_menu.dart';
-import 'memory_game_page.dart';
+import 'player_selection_page.dart';
+import '../../../core/asset_cache.dart';
+
+
 
 class LevelSelectionPage extends StatelessWidget {
   final MemoryMode mode;
@@ -26,7 +29,7 @@ class LevelSelectionPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => MemoryGamePage(level: level, mode: mode),
+                  builder: (_) => PlayerSelectionPage(level: level, mode: mode),
                 ),
               );
             },

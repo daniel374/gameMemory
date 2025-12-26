@@ -21,37 +21,88 @@ class PlayerSelectionPage extends StatefulWidget {
 
 class _PlayerSelectionPageState extends State<PlayerSelectionPage> {
   int playerCount = 2;
-  late List<TextEditingController> controllers;
 
-  /// 🧠 nombres guardados en Hive
+  /// 🧠 BD
   List<String> knownPlayers = [];
-  List<bool> isExistingPlayer = [];
 
+  /// 👥 selección
+  final List<String> selectedPlayers = [];
+  final List<TextEditingController> newPlayerControllers = [];
+
+  final Map<int, String?> errors = {};
 
   @override
   void initState() {
     super.initState();
-    controllers = List.generate(playerCount, (_) => TextEditingController());
-    isExistingPlayer = List.generate(playerCount, (_) => false);
     _loadPlayers();
+    _syncControllers();
   }
 
   Future<void> _loadPlayers() async {
     final players = await GameDatabase.getPlayerNames();
+    setState(() => knownPlayers = players);
+  }
+
+  void _syncControllers() {
+    final needed = playerCount - selectedPlayers.length;
+    newPlayerControllers
+      ..clear()
+      ..addAll(List.generate(needed, (_) => TextEditingController()));
+    errors.clear();
+  }
+
+  void _updatePlayerCount(int count) {
     setState(() {
-      knownPlayers = players;
+      playerCount = count;
+
+      if (selectedPlayers.length > playerCount) {
+        selectedPlayers.removeRange(playerCount, selectedPlayers.length);
+      }
+
+      _syncControllers();
     });
   }
 
-  void _updateControllers(int newCount) {
-    setState(() {
-      playerCount = newCount;
-      controllers = List.generate(
-        playerCount,
-        (i) =>
-            i < controllers.length ? controllers[i] : TextEditingController(),
-      );
-    });
+  String? _validateName(String value, int index) {
+    final name = value.trim();
+
+    if (name.isEmpty) return 'Nombre requerido';
+    if (name.length < 2) return 'Mínimo 2 caracteres';
+
+    final lower = name.toLowerCase();
+
+    /// duplicado con seleccionados
+    if (selectedPlayers.map((e) => e.toLowerCase()).contains(lower)) {
+      return 'Jugador ya seleccionado';
+    }
+
+    /// duplicado entre nuevos
+    for (int i = 0; i < newPlayerControllers.length; i++) {
+      if (i == index) continue;
+      if (newPlayerControllers[i].text.trim().toLowerCase() == lower) {
+        return 'Nombre duplicado';
+      }
+    }
+
+    /// duplicado en BD
+    if (knownPlayers.map((e) => e.toLowerCase()).contains(lower)) {
+      return 'Jugador ya registrado (selecciónalo arriba)';
+    }
+
+    return null;
+  }
+
+  bool get _canStart {
+    final total = selectedPlayers.length + newPlayerControllers.length;
+
+    if (total != playerCount) return false;
+
+    for (int i = 0; i < newPlayerControllers.length; i++) {
+      final error = _validateName(newPlayerControllers[i].text, i);
+      if (error != null) return false;
+    }
+
+    return true;
   }
 
   @override
@@ -62,9 +113,8 @@ class _PlayerSelectionPageState extends State<PlayerSelectionPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-
             const Text(
               '¿Cuántos jugadores?',
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
@@ -78,61 +128,93 @@ class _PlayerSelectionPageState extends State<PlayerSelectionPage> {
               divisions: 3,
               label: '$playerCount',
               value: playerCount.toDouble(),
-              onChanged: (value) => _updateControllers(value.toInt()),
-            ),
-
-            Text(
-              '$playerCount jugadores',
-              style: const TextStyle(fontSize: 22),
+              onChanged: (v) => _updatePlayerCount(v.toInt()),
             ),
 
             const SizedBox(height: 30),
 
-            /// 👥 INPUTS DE JUGADORES
-            Column(
-              children: List.generate(playerCount, (i) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Autocomplete<String>(
-                    optionsBuilder: (text) {
-                      if (text.text.isEmpty)
-                        return const Iterable<String>.empty();
-
-                      return knownPlayers.where(
-                        (name) => name.toLowerCase().contains(
-                          text.text.toLowerCase(),
-                        ),
-                      );
-                    },
-                    onSelected: (value) {
-                      controllers[i].text = value;
-                    },
-                    fieldViewBuilder:
-                        (context, textController, focusNode, onFieldSubmitted) {
-                          return TextField(
-                            controller: controllers[i], // 👈 CLAVE
-                            focusNode: focusNode,
-                            decoration: InputDecoration(
-                              labelText: 'Jugador ${i + 1}',
-                              border: const OutlineInputBorder(),
-                            ),
-                          );
-                        },
-                  ),
-                );
-              }),
-            ),
-
-            const SizedBox(height: 30),
-
-            /// ▶️ INICIAR JUEGO
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(260, 70),
-                textStyle: const TextStyle(fontSize: 24),
+            /// 🧠 REGISTRADOS
+            if (knownPlayers.isNotEmpty) ...[
+              const Text(
+                'Jugadores registrados',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              onPressed: _startGame,
-              child: const Text('Iniciar juego'),
+              const SizedBox(height: 12),
+
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: knownPlayers.map((name) {
+                  final selected = selectedPlayers.contains(name);
+                  final disabled =
+                      !selected && selectedPlayers.length >= playerCount;
+
+                  return FilterChip(
+                    label: Text(name),
+                    selected: selected,
+                    onSelected: disabled
+                        ? null
+                        : (v) {
+                            setState(() {
+                              v
+                                  ? selectedPlayers.add(name)
+                                  : selectedPlayers.remove(name);
+                              _syncControllers();
+                            });
+                          },
+                    selectedColor: Colors.green.shade300,
+                    avatar: const Icon(Icons.person),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 30),
+            ],
+
+            /// ✏️ NUEVOS
+            if (newPlayerControllers.isNotEmpty) ...[
+              const Text(
+                'Jugadores nuevos',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
+              Column(
+                children: List.generate(newPlayerControllers.length, (i) {
+                  final controller = newPlayerControllers[i];
+                  final error = _validateName(controller.text, i);
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      controller: controller,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        labelText: 'Jugador ${selectedPlayers.length + i + 1}',
+                        prefixIcon: Icon(
+                          error == null ? Icons.check_circle : Icons.error,
+                          color: error == null ? Colors.green : Colors.red,
+                        ),
+                        errorText: error,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+
+            const SizedBox(height: 30),
+
+            Center(
+              child: ElevatedButton(
+                onPressed: _canStart ? _startGame : null,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(260, 70),
+                  textStyle: const TextStyle(fontSize: 24),
+                ),
+                child: const Text('Iniciar juego'),
+              ),
             ),
           ],
         ),
@@ -143,14 +225,13 @@ class _PlayerSelectionPageState extends State<PlayerSelectionPage> {
   Future<void> _startGame() async {
     final players = <Player>[];
 
-    for (int i = 0; i < playerCount; i++) {
-      final name = controllers[i].text.trim().isEmpty
-          ? 'Jugador ${i + 1}'
-          : controllers[i].text.trim();
-
+    for (final name in selectedPlayers) {
       players.add(Player(name: name));
+    }
 
-      /// 💾 Guardar jugador en BD
+    for (final controller in newPlayerControllers) {
+      final name = controller.text.trim();
+      players.add(Player(name: name));
       await GameDatabase.registerPlayer(name);
     }
 

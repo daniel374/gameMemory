@@ -45,7 +45,6 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
       body: Column(
         children: [
           _buildScoreBoard(),
-
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(16),
@@ -62,7 +61,6 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
                     controller.cards[i],
                     () => setState(() {}),
                   );
-
                   await _handleFlipResult(result, controller.cards[i].value);
                 },
               ),
@@ -73,7 +71,6 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
     );
   }
 
-  // 🏆 MARCADOR SUPERIOR
   Widget _buildScoreBoard() {
     return SizedBox(
       height: 90,
@@ -126,6 +123,11 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
 
         // 🏆 Guardar score single player
         if (controller.players.length == 1) {
+          final playerName = controller.players.first.name;
+
+          // Registrar jugador si no existe
+          await GameDatabase.registerPlayer(playerName);
+          // Guardar score single player
           await GameDatabase.saveSingleScore(
             SingleScore(
               mode: widget.mode.title,
@@ -147,7 +149,6 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
 
     if (result.isDraw) {
       final names = result.tiedPlayers.map((p) => p.name).join(', ');
-      // 🟰 EMPATE
       showDialog(
         context: context,
         builder: (_) => AlertDialog(

@@ -10,11 +10,20 @@ class PlayerStats extends HiveObject {
   @HiveField(1)
   int wins;
 
-  PlayerStats({required this.name, this.wins = 0});
+  @HiveField(2)
+  int gamesPlayed;
 
-  Map<String, dynamic> toMap() => {'name': name, 'wins': wins};
+  PlayerStats({required this.name, this.wins = 0, this.gamesPlayed = 0});
 
-  factory PlayerStats.fromMap(Map map) {
-    return PlayerStats(name: map['name'], wins: map['wins']);
+  /// 🎮 se llama siempre que juega
+  void addGame() {
+    gamesPlayed++;
+    save();
+  }
+
+  /// 🏆 se llama SOLO si gana
+  void addWin() {
+    wins++;
+    save();
   }
 }

@@ -3,7 +3,6 @@ import '../../../core/database/game_database.dart';
 import '../../../core/database/models/single_score.dart';
 import '../../../core/database/models/player_stats.dart';
 
-
 class RankingsPage extends StatelessWidget {
   const RankingsPage({super.key});
 

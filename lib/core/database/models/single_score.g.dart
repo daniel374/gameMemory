@@ -20,19 +20,25 @@ class SingleScoreAdapter extends TypeAdapter<SingleScore> {
       mode: fields[0] as String,
       attempts: fields[1] as int,
       date: fields[2] as DateTime,
+      category: fields[3] as String,
+      level: fields[4] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, SingleScore obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.mode)
       ..writeByte(1)
       ..write(obj.attempts)
       ..writeByte(2)
-      ..write(obj.date);
+      ..write(obj.date)
+      ..writeByte(3)
+      ..write(obj.category)
+      ..writeByte(4)
+      ..write(obj.level);
   }
 
   @override

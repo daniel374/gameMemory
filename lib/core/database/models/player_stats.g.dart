@@ -19,17 +19,20 @@ class PlayerStatsAdapter extends TypeAdapter<PlayerStats> {
     return PlayerStats(
       name: fields[0] as String,
       wins: fields[1] as int,
+      gamesPlayed: fields[2] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, PlayerStats obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.wins);
+      ..write(obj.wins)
+      ..writeByte(2)
+      ..write(obj.gamesPlayed);
   }
 
   @override

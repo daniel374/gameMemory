@@ -36,9 +36,13 @@ class RankingsPage extends StatelessWidget {
   }
 
   // 🔹 SINGLE PLAYER
-  Widget _buildSinglePlayer(String mode) {
+  Widget _buildSinglePlayer(String mode, {String? category, String? level}) {
     return FutureBuilder<List<SingleScore>>(
-      future: GameDatabase.getTopSingleScores(mode),
+      future: GameDatabase.getTopSingleScores(
+        mode,
+        category: category,
+        level: level,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(

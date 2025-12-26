@@ -133,6 +133,8 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
               mode: widget.mode.title,
               attempts: controller.attempts,
               date: DateTime.now(),
+              category: widget.mode.title, // <-- Animals, Letters, Numbers
+              level: widget.level.title, // <-- Fácil, Medio, Difícil
             ),
           );
         }

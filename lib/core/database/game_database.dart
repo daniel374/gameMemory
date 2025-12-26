@@ -10,18 +10,28 @@ class GameDatabase {
   static Future<void> saveSingleScore(SingleScore score) async {
     final box = Hive.box<SingleScore>(singleBox);
 
-    // Filtrar scores del mismo modo
-    final scores = box.values.where((s) => s.mode == score.mode).toList();
+    // Filtrar scores del mismo modo + categoría + nivel
+    final scores = box.values
+        .where(
+          (s) =>
+              s.mode == score.mode &&
+              s.category == score.category &&
+              s.level == score.level,
+        )
+        .toList();
+
     scores.add(score);
 
     // Ordenar por menor cantidad de intentos
     scores.sort((a, b) => a.attempts.compareTo(b.attempts));
     final topScores = scores.take(3).toList();
 
-    // Limpiar scores antiguos de ese modo
+    // Limpiar scores antiguos de ese modo + categoría + nivel
     final keysToDelete = box.keys.where((key) {
       final s = box.get(key);
-      return s?.mode == score.mode;
+      return s?.mode == score.mode &&
+          s?.category == score.category &&
+          s?.level == score.level;
     }).toList();
 
     await box.deleteAll(keysToDelete);
@@ -33,10 +43,26 @@ class GameDatabase {
   }
 
   /// 🔹 SINGLE PLAYER – OBTENER TOP 3
-  static Future<List<SingleScore>> getTopSingleScores(String mode) async {
+  /// 🔹 Obtener top single scores filtrado por categoría y nivel
+  static Future<List<SingleScore>> getTopSingleScores(
+    String mode, {
+    String? category,
+    String? level,
+  }) async {
     final box = Hive.box<SingleScore>(singleBox);
-    final scores = box.values.where((s) => s.mode == mode).toList();
+
+    var scores = box.values.where((s) => s.mode == mode).toList();
+
+    if (category != null) {
+      scores = scores.where((s) => s.category == category).toList();
+    }
+
+    if (level != null) {
+      scores = scores.where((s) => s.level == level).toList();
+    }
+
     scores.sort((a, b) => a.attempts.compareTo(b.attempts));
+
     return scores.take(3).toList();
   }
 

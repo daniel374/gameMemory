@@ -2,6 +2,7 @@ import '../models/memory_mode.dart';
 import '../models/game_level.dart';
 import '../models/card_mode.dart';
 import '../models/player.dart';
+import 'game_result.dart';
 
 enum FlipResult { none, correct, wrong, win }
 
@@ -81,8 +82,17 @@ class MemoryGameController {
   bool get isCompleted => cards.every((card) => card.isMatched);
 
   // 🏆 GANADOR
-  Player get winner {
-    players.sort((a, b) => b.score.compareTo(a.score));
-    return players.first;
+  GameResult get gameResult {
+    final maxScore = players
+        .map((p) => p.score)
+        .reduce((a, b) => a > b ? a : b);
+
+    final winners = players.where((p) => p.score == maxScore).toList();
+
+    if (winners.length > 1) {
+      return GameResult(isDraw: true, tiedPlayers: winners);
+    }
+
+    return GameResult(isDraw: false, winner: winners.first);
   }
 }

@@ -6,6 +6,8 @@ import '../models/game_level.dart';
 import 'memory_card_widget.dart';
 import '../../../utils/sound_player.dart';
 import '../../../utils/voice_player.dart';
+import '../../../core/database/game_database.dart';
+import '../../../core/database/models/single_score.dart';
 
 class MemoryGamePage extends StatefulWidget {
   final GameLevel level;
@@ -61,7 +63,7 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
                     () => setState(() {}),
                   );
 
-                  _handleFlipResult(result, controller.cards[i].value);
+                  await _handleFlipResult(result, controller.cards[i].value);
                 },
               ),
             ),
@@ -110,7 +112,7 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
     );
   }
 
-  void _handleFlipResult(FlipResult result, String value) {
+  Future<void> _handleFlipResult(FlipResult result, String value) async {
     switch (result) {
       case FlipResult.correct:
         SoundService.playCorrect();
@@ -121,6 +123,18 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
         break;
       case FlipResult.win:
         SoundService.playWin();
+
+        // 🏆 Guardar score single player
+        if (controller.players.length == 1) {
+          await GameDatabase.saveSingleScore(
+            SingleScore(
+              mode: widget.mode.title,
+              attempts: controller.attempts,
+              date: DateTime.now(),
+            ),
+          );
+        }
+
         _showWinDialog();
         break;
       default:
@@ -128,28 +142,59 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
     }
   }
 
-  void _showWinDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text('🏆 Fin del juego'),
-        content: Text(
-          'Ganó ${controller.winner.name}\n'
-          '⭐ ${controller.winner.score} puntos',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Volver'),
+  void _showWinDialog() async {
+    final result = controller.gameResult;
+
+    if (result.isDraw) {
+      final names = result.tiedPlayers.map((p) => p.name).join(', ');
+      // 🟰 EMPATE
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('🟰 Empate'),
+          content: Text(
+            'Empate entre:\n$names',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20),
           ),
-        ],
-      ),
-    );
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      final winner = result.winner!;
+
+      // 🏆 REGISTRAR GANADOR SOLO SI NO HAY EMPATE
+      await GameDatabase.registerWin(winner.name);
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: const Text('🏆 Ganador'),
+          content: Text(
+            '${winner.name}\n⭐ ${winner.score} puntos',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 22),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

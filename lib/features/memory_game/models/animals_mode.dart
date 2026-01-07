@@ -9,7 +9,32 @@ class AnimalsMode extends MemoryMode {
 
   @override
   List<String> generateItems(int pairCount) {
-    const animals = ['🐶', '🐱', '🦁', '🐸', '🐵', '🐼', '🐰', '🐯'];
+    const animals = [
+      '🐶',
+      '🐱',
+      '🐭',
+      '🐹',
+      '🐰',
+      '🦊',
+      '🐻',
+      '🐼',
+      '🐨',
+      '🐯',
+      '🦁',
+      '🐮',
+      '🐷',
+      '🐸',
+      '🐵',
+      '🐔',
+      '🐧',
+      '🐦',
+      '🐤',
+      '🦆',
+      '🦉',
+      '🐺',
+      '🦄',
+      '🐝',
+    ];
     return animals.take(pairCount).toList();
   }
 }

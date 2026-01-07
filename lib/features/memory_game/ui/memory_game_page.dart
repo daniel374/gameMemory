@@ -8,6 +8,7 @@ import '../../../utils/sound_player.dart';
 import '../../../utils/voice_player.dart';
 import '../../../core/database/game_database.dart';
 import '../../../core/database/models/single_score.dart';
+import 'dart:math' as math;
 
 class MemoryGamePage extends StatefulWidget {
   final GameLevel level;
@@ -40,30 +41,80 @@ class _MemoryGamePageState extends State<MemoryGamePage> {
 
   @override
   Widget build(BuildContext context) {
+    final gridSize = widget.level.gridSize; // rows / columns
+
     return Scaffold(
       appBar: AppBar(title: Text('Memoria - ${widget.mode.title}')),
       body: Column(
         children: [
           _buildScoreBoard(),
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: controller.cards.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemBuilder: (_, i) => MemoryCardWidget(
-                card: controller.cards[i],
-                onTap: () async {
-                  final result = await controller.flipCard(
-                    controller.cards[i],
-                    () => setState(() {}),
-                  );
-                  await _handleFlipResult(result, controller.cards[i].value);
-                },
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const padding = 9.0;
+                const spacing = 9.0;
+                const minCardWidth = 160.0; // 👈 REALISTA PARA MÓVIL
+
+                final gridSize = widget.level.gridSize;
+
+                final availableWidth = constraints.maxWidth - (padding * 2);
+
+                // Columnas base por nivel
+                int columns = gridSize.columns;
+
+                // Máximo de columnas posibles por ancho
+                final maxColumnsByWidth =
+                    ((availableWidth + spacing) / (minCardWidth + spacing))
+                        .floor();
+
+                // 🔒 Limitar columnas (nunca menos de 3)
+                columns = math.max(3, maxColumnsByWidth);
+
+                final rows = (controller.cards.length / columns).ceil();
+
+                final totalHorizontalSpacing = spacing * (columns - 1);
+                final totalVerticalSpacing = spacing * (rows - 1);
+
+                final availableHeight = constraints.maxHeight - (padding * 2);
+
+                final itemWidth =
+                    (availableWidth - totalHorizontalSpacing) / columns;
+                final itemHeight =
+                    (availableHeight - totalVerticalSpacing) / rows;
+
+                double heightFactor = 1.0;
+
+                if (widget.level == GameLevel.legendary) {
+                  heightFactor = 1.35; // 👈 10–20% es ideal
+                }
+
+                final adjustedItemHeight = itemHeight * heightFactor;
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: controller.cards.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: spacing,
+                    mainAxisSpacing: spacing,
+
+                    childAspectRatio: itemWidth / adjustedItemHeight,
+                  ),
+                  itemBuilder: (_, i) => MemoryCardWidget(
+                    card: controller.cards[i],
+                    onTap: () async {
+                      final result = await controller.flipCard(
+                        controller.cards[i],
+                        () => setState(() {}),
+                      );
+                      await _handleFlipResult(
+                        result,
+                        controller.cards[i].value,
+                      );
+                    },
+                  ),
+                );
+              },
             ),
           ),
         ],

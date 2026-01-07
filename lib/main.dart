@@ -18,6 +18,14 @@ void main() async {
     Hive.registerAdapter(SingleScoreAdapter());
   }
 
+  // Borrar boxes antiguos si existen
+  /*if (await Hive.boxExists('single_scores')) {
+    await Hive.deleteBoxFromDisk('single_scores');
+  }
+  if (await Hive.boxExists('player_stats')) {
+    await Hive.deleteBoxFromDisk('player_stats');
+  }*/
+
   await Hive.openBox<SingleScore>('single_scores');
   await Hive.openBox<PlayerStats>('player_stats');
 

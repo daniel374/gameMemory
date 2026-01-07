@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:test2app/core/asset_cache.dart';
+import 'package:test2app/features/memory_game/models/multiply_mode.dart';
 
 import '../models/animals_mode.dart';
 import '../models/letters_mode.dart';
 import '../models/numbers_mode.dart';
 import '../models/memory_mode.dart';
+import '../models/clothes_mode.dart';
+import '../models/transport_mode.dart';
+import '../models/multiply_mode.dart';
 
 import '../../../widgets/center_menu.dart';
 import 'level_selection_page.dart';
@@ -15,7 +19,14 @@ class ModeSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final modes = <MemoryMode>[AnimalsMode(), LettersMode(), NumbersMode()];
+    final modes = <MemoryMode>[
+      AnimalsMode(),
+      LettersMode(),
+      NumbersMode(),
+      ClothesMode(),
+      TransportMode(),
+      MultiplyMode(),
+    ];
 
     return Scaffold(
       backgroundColor: Colors.orange.shade100,

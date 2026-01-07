@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../models/memory_mode.dart';
 import '../models/game_level.dart';
 import '../models/card_mode.dart';
@@ -32,8 +34,11 @@ class MemoryGameController {
   void _initGame() {
     final values = mode.generateItems(level.pairCount);
 
-    cards = [...values, ...values].map((e) => MemoryCard(value: e)).toList()
-      ..shuffle();
+    debugPrint('LEVEL: $level');
+    debugPrint('EXPECTED PAIRS: ${level.pairCount}');
+    debugPrint('GENERATED VALUES: ${values.length}');
+    cards = _generateCards(level.pairCount, mode);
+    debugPrint('TOTAL CARDS: ${cards.length}');
   }
 
   Future<FlipResult> flipCard(MemoryCard card, void Function() refresh) async {
@@ -94,5 +99,17 @@ class MemoryGameController {
     }
 
     return GameResult(isDraw: false, winner: winners.first);
+  }
+
+  List<MemoryCard> _generateCards(int pairCount, MemoryMode mode) {
+    final values = mode.generateItems(pairCount);
+
+    final cards = <MemoryCard>[
+      for (final value in values) MemoryCard(value: value),
+      for (final value in values) MemoryCard(value: value),
+    ];
+
+    cards.shuffle();
+    return cards;
   }
 }
